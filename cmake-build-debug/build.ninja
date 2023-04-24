@@ -72,11 +72,11 @@ build edit_cache: phony CMakeFiles/edit_cache.util
 
 build cmake_object_order_depends_target_HW_2_PRIVATE: phony || CMakeFiles/HW_2_PRIVATE.dir
 
-build CMakeFiles/HW_2_PRIVATE.dir/5/main.c.o: C_COMPILER__HW_2_PRIVATE_Debug /Users/logo/CLionProjects/HW_2_PRIVATE/5/main.c || cmake_object_order_depends_target_HW_2_PRIVATE
-  DEP_FILE = CMakeFiles/HW_2_PRIVATE.dir/5/main.c.o.d
+build CMakeFiles/HW_2_PRIVATE.dir/6/main.c.o: C_COMPILER__HW_2_PRIVATE_Debug /Users/logo/CLionProjects/HW_2_PRIVATE/6/main.c || cmake_object_order_depends_target_HW_2_PRIVATE
+  DEP_FILE = CMakeFiles/HW_2_PRIVATE.dir/6/main.c.o.d
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk -std=gnu17
   OBJECT_DIR = CMakeFiles/HW_2_PRIVATE.dir
-  OBJECT_FILE_DIR = CMakeFiles/HW_2_PRIVATE.dir/5
+  OBJECT_FILE_DIR = CMakeFiles/HW_2_PRIVATE.dir/6
 
 
 # =============================================================================
@@ -86,7 +86,7 @@ build CMakeFiles/HW_2_PRIVATE.dir/5/main.c.o: C_COMPILER__HW_2_PRIVATE_Debug /Us
 #############################################
 # Link the executable HW_2_PRIVATE
 
-build HW_2_PRIVATE: C_EXECUTABLE_LINKER__HW_2_PRIVATE_Debug CMakeFiles/HW_2_PRIVATE.dir/5/main.c.o
+build HW_2_PRIVATE: C_EXECUTABLE_LINKER__HW_2_PRIVATE_Debug CMakeFiles/HW_2_PRIVATE.dir/6/main.c.o
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk
   OBJECT_DIR = CMakeFiles/HW_2_PRIVATE.dir
   POST_BUILD = :

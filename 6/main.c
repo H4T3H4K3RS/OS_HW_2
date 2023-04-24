@@ -1,8 +1,5 @@
-//
-// Created by Всеволод Овчинников on 25.04.2023.
-//
-
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/ipc.h>
@@ -11,14 +8,27 @@
 #include <sys/types.h>
 
 #define ROOMS_COUNT 30
-#define SEM_KEY 1234
-#define SHM_KEY 5678
+#define SEM_KEY 3333
+#define SHM_KEY 4444
+int *rooms;
+int sem_id;
+int shm_id;
+
+void handle_sigint(int sig) {
+    printf("Interrupt signal received, cleaning up... Sig: %d\n", sig);
+    shmdt(rooms);
+    shmctl(shm_id, IPC_RMID, NULL);
+    semctl(sem_id, 0, IPC_RMID, 0);
+    killpg(getpgid(getpid()), sig);
+    exit(EXIT_FAILURE);
+}
 
 void client(int client_id, int *rooms, int sem_id) {
     while (1) {
         printf("[Client #%d] Waiting for allocation\n", client_id);
         struct sembuf sem_op = {0, -1, SEM_UNDO};
         semop(sem_id, &sem_op, 1);
+
         int room_id = -1;
         for (int i = 0; i < ROOMS_COUNT; ++i) {
             if (!rooms[i]) {
@@ -34,6 +44,7 @@ void client(int client_id, int *rooms, int sem_id) {
             rooms[room_id] = 0;
             sem_op.sem_op = 1;
             semop(sem_id, &sem_op, 1);
+
             printf("[Client #%d] Checkout. Stayed for: {%d}s\n", client_id, sleep_time);
             break;
         } else {
@@ -44,9 +55,10 @@ void client(int client_id, int *rooms, int sem_id) {
 }
 
 int main() {
-    int sem_id = semget(SEM_KEY, 1, IPC_CREAT | 0666);
-    int shm_id = shmget(SHM_KEY, ROOMS_COUNT * sizeof(int), IPC_CREAT | 0666);
-    int *rooms = (int *) shmat(shm_id, NULL, 0);
+    signal(SIGINT, handle_sigint);
+    sem_id = semget(SEM_KEY, 1, IPC_CREAT | 0666);
+    shm_id = shmget(SHM_KEY, ROOMS_COUNT * sizeof(int), IPC_CREAT | 0666);
+    rooms = (int *) shmat(shm_id, NULL, 0);
     union semun sem_arg;
     sem_arg.val = ROOMS_COUNT;
     semctl(sem_id, 0, SETVAL, sem_arg);
@@ -68,5 +80,6 @@ int main() {
     shmdt(rooms);
     shmctl(shm_id, IPC_RMID, NULL);
     semctl(sem_id, 0, IPC_RMID, 0);
+    killpg(getpgid(getpid()), 0);
     return 0;
 }

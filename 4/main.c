@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -19,6 +20,20 @@ typedef struct {
 } SharedData;
 
 SharedData *shared_data;
+
+#include <signal.h>
+
+void handle_sigint(int sig) {
+    printf("Interrupt signal received, cleaning up... Sig: %d\n", sig);
+    if (munmap(shared_data, sizeof(SharedData)) == -1) {
+        perror("munmap");
+    }
+    if (shm_unlink("/shared_memory") == -1) {
+        perror("shm_unlink");
+    }
+    killpg(getpgid(getpid()), sig);
+    exit(EXIT_FAILURE);
+}
 
 void client(void *index) {
     int client_id = *(int *) index;
@@ -49,11 +64,15 @@ void client(void *index) {
 }
 
 int main() {
+    signal(SIGINT, handle_sigint);
     int fd = shm_open("/shared_memory", O_CREAT | O_RDWR, 0644);
     if (fd == -1) {
         perror("shm_open");
         exit(EXIT_FAILURE);
     }
+    int num_clients;
+    printf("Number of clients: ");
+    scanf("%d", &num_clients);
     if (ftruncate(fd, sizeof(SharedData)) == -1) {
         perror("ftruncate");
         exit(EXIT_FAILURE);
@@ -67,9 +86,6 @@ int main() {
     for (int i = 0; i < ROOMS_COUNT; ++i) {
         shared_data->rooms[i] = 0;
     }
-    int num_clients;
-    printf("Number of clients: ");
-    scanf("%d", &num_clients);
     pid_t pid;
     for (int i = 0; i < num_clients; ++i) {
         int *t = malloc(sizeof(int));
@@ -86,12 +102,12 @@ int main() {
     for (int i = 0; i < num_clients; ++i) {
         wait(NULL);
     }
-    sem_destroy(&shared_data->room_sem);
     if (munmap(shared_data, sizeof(SharedData)) == -1) {
         perror("munmap");
     }
     if (shm_unlink("/shared_memory") == -1) {
         perror("shm_unlink");
     }
-    return 0;
+    killpg(getpgid(getpid()), 0);
+    exit(EXIT_SUCCESS);
 }

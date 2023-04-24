@@ -9,11 +9,23 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <signal.h>
 
 #define ROOMS_COUNT 30
 
 int *rooms;
 sem_t *room_sem;
+
+void handle_sigint(int sig) {
+    printf("Interrupt signal received, cleaning up... Sig: %d\n", sig);
+    munmap(rooms, ROOMS_COUNT * sizeof(int));
+    shm_unlink("/rooms_shm");
+    munmap(room_sem, sizeof(sem_t));
+    sem_destroy(&room_sem[0]);
+    shm_unlink("/sem_shm");
+    killpg(getpgid(getpid()), sig);
+    exit(EXIT_FAILURE);
+}
 
 void client(int client_id) {
     while (1) {
@@ -43,6 +55,7 @@ void client(int client_id) {
 }
 
 int main() {
+    signal(SIGINT, handle_sigint);
     int num_clients;
     printf("Number of clients: ");
     scanf("%d", &num_clients);
@@ -68,6 +81,6 @@ int main() {
     munmap(room_sem, sizeof(sem_t));
     sem_destroy(&room_sem[0]);
     shm_unlink("/sem_shm");
-
-    return 0;
+    killpg(getpgid(getpid()), 0);
+    exit(EXIT_SUCCESS);
 }
